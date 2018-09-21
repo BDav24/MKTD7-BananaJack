@@ -1,5 +1,7 @@
 import { html, render } from 'lit-html';
 
+import BackendApi from './api';
+
 const style = `
   form[name=login] {
       display: flex;
@@ -38,6 +40,9 @@ const style = `
 `
 
 class Login extends HTMLElement {
+
+  private username = ''
+
   constructor() {
     super();
     this.attachShadow({ mode: 'open' })
@@ -47,16 +52,22 @@ class Login extends HTMLElement {
     render(this.template(), this.shadowRoot)
   }
 
-  login(event) {
+  login = async (event) => {
     event.preventDefault()
-    this.dispatchEvent(new CustomEvent('login', { detail: event }))
+    const user = await BackendApi.login(this.username)
+    this.dispatchEvent(new CustomEvent('login', { detail: { user } }))
   }
 
   template() {
     return html`
       <style>${style}</style>
       <form name="login">
-        <label> Name <input name="name" value="" required="" placeholder="Enter your name"></label>
+        <label>
+          Name
+          <input name="name" value="${this.username}"
+            @change="${(e) => this.username = e.target.value}"
+            required="" placeholder="Enter your name">
+        </label>
         <button @click=${this.login}>Login</button>
       </form>
     `;

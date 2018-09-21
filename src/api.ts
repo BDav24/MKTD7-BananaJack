@@ -1,12 +1,13 @@
 import { RoomEvent, Player, Room, Action } from './model';
 
 
-export class BackendApi {
+class BackendApi {
+  listener = null
 
-    constructor(readonly url: string,
-                readonly listener: (event:RoomEvent) => void) {
+    constructor(readonly url: string) {
         console.debug('Use', url);
     }
+
     private handle<T>(res: Response): Promise<T> {
         if (res.ok) {
             return res.json();
@@ -43,10 +44,18 @@ export class BackendApi {
         ws.onmessage = (event: MessageEvent) => {
             console.debug('WS message', event.data);
             const roomEvent = JSON.parse(event.data) as RoomEvent;
-            this.listener(roomEvent);
+            this.notify(roomEvent);
         };
         ws.onclose = () => console.info('WS close');
         ws.onerror = (event: Event) => console.error('WS error', event);
+    }
+
+    private notify(event) {
+      this.listener(event)
+    }
+
+    setListener(listener: (event:RoomEvent) => void) {
+      this.listener = listener
     }
 
     // Auth
@@ -79,3 +88,5 @@ export class BackendApi {
         return this.postJson('/api/room/move', {roomId, playerId, action})
     }
 }
+
+export default new BackendApi('http://ilaborie.org:9898')
